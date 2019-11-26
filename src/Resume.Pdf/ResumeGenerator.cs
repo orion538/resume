@@ -1,10 +1,15 @@
-﻿using iText.Kernel.Pdf;
+﻿using iText.IO.Font.Constants;
+using iText.IO.Image;
+using iText.Kernel.Colors;
+using iText.Kernel.Font;
+using iText.Kernel.Pdf;
 using iText.Layout;
 using iText.Layout.Borders;
 using iText.Layout.Element;
 using iText.Layout.Properties;
 using Resume.Data.Json;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Resume.Pdf
 {
@@ -16,16 +21,35 @@ namespace Resume.Pdf
     public class ResumeGenerator : IResumeGenerator
     {
         private const string FileName = "Resume.pdf";
+        private const float Spacing = 10f;
 
         public void Create(Data.Json.Resume resume)
         {
             var document = CreateDocument();
-            document.Add(CreateBasics(resume.Basics));
-            document.Add(CreateWork(resume.Work));
-            document.Add(CreateEducation(resume.Education));
-            document.Add(CreateLanguages(resume.Languages));
-            document.Add(CreateInterests(resume.Interests));
-            document.Add(CreateSkills(resume.Skills));
+            document.SetMargins(0, 0, 0, 0);
+            document.SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA)).SetFontSize(9);
+
+            var pageTable = new Table(2);
+            pageTable.SetWidth(UnitValue.CreatePercentValue(100));
+
+            var sideBarCell = new Cell().SetBackgroundColor(new DeviceRgb(242, 242, 242)).SetBorder(Border.NO_BORDER).SetWidth(UnitValue.CreatePercentValue(30));
+            var contentCell = new Cell().SetBorder(Border.NO_BORDER).SetWidth(UnitValue.CreatePercentValue(70));
+
+            sideBarCell.Add(CreateBasics(resume.Basics));
+            sideBarCell.Add(CreateLanguages(resume.Languages));
+            sideBarCell.Add(CreateInterests(resume.Interests));
+
+            contentCell.Add(CreateSummary(resume.Basics.Summary));
+            contentCell.Add(CreateWork(resume.Work));
+            contentCell.Add(CreateEducation(resume.Education));
+            contentCell.Add(CreateSkills(resume.Skills));
+
+            pageTable.AddCell(sideBarCell);
+            pageTable.AddCell(contentCell);
+            pageTable.AddCell(new Cell(1, 2).Add(CreateMessage()));
+
+            document.Add(pageTable);
+
             document.Close();
         }
 
@@ -38,86 +62,44 @@ namespace Resume.Pdf
 
         private Table CreateBasics(Basics basics)
         {
-            var table = new Table(new float[] { 1, 1 });
+            var table = new Table(1);
             table.SetWidth(UnitValue.CreatePercentValue(100));
 
-            table.AddHeaderCell(new Cell(1, 2).SetBorder(Border.NO_BORDER).SetBorderBottom(new SolidBorder(1)).Add(new Paragraph("Basics")));
+            table.AddHeaderCell(new Cell(1, 1).SetBorder(Border.NO_BORDER).SetBorderBottom(new SolidBorder(1)).Add(new Paragraph("Personalia")).SetFontSize(11));
 
-            table.AddCell(new Cell().SetBorder(Border.NO_BORDER).SetPaddingTop(20).Add(new Paragraph(nameof(basics.Name))));
-            table.AddCell(new Cell().SetBorder(Border.NO_BORDER).SetPaddingTop(20).Add(new Paragraph(basics.Name)));
+            table.AddCell(new Cell(1, 2).SetBorder(Border.NO_BORDER).SetHeight(Spacing));
 
-            table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(nameof(basics.Location.Address))));
-            table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(basics.Location.Address)));
+            table.AddCell(CreateDefaultCell(nameof(basics.Name), true));
+            table.AddCell(CreateDefaultCell(basics.Name));
 
-            table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(nameof(basics.Location.PostalCode))));
-            table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(basics.Location.PostalCode)));
+            table.AddCell(CreateDefaultCell(nameof(basics.Location.Address), true));
+            table.AddCell(CreateDefaultCell(basics.Location.Address));
+            table.AddCell(CreateDefaultCell($"{basics.Location.PostalCode}, {basics.Location.City}"));
+            table.AddCell(CreateDefaultCell(basics.Location.CountryCode));
 
-            table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(nameof(basics.Location.Region))));
-            table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(basics.Location.Region)));
+            table.AddCell(CreateDefaultCell(nameof(basics.Email), true));
+            table.AddCell(CreateDefaultCell(basics.Email));
 
-            table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(nameof(basics.Location.City))));
-            table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(basics.Location.City)));
-
-            table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(nameof(basics.Location.CountryCode))));
-            table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(basics.Location.CountryCode)));
-
-            table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(nameof(basics.Email))));
-            table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(basics.Email)));
-
-            table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(nameof(basics.Phone))));
-            table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(basics.Phone)));
-
-            table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(nameof(basics.Picture))));
-            table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(basics.Picture)));
-
-            table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(nameof(basics.Summary))));
-            table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(basics.Summary)));
+            table.AddCell(CreateDefaultCell(nameof(basics.Phone), true));
+            table.AddCell(CreateDefaultCell(basics.Phone));
 
             return table;
         }
 
-        private Table CreateWork(IEnumerable<Work> previousWork)
+        private static Table CreateWork(IEnumerable<Work> previousWork)
         {
-            var table = new Table(new float[] { 1, 1 });
+            var table = new Table(1);
             table.SetWidth(UnitValue.CreatePercentValue(100));
-            table.SetMarginTop(20);
 
-            table.AddHeaderCell(new Cell(1, 2).SetBorder(Border.NO_BORDER).SetBorderBottom(new SolidBorder(1)).Add(new Paragraph("Work experience")));
+            table.AddHeaderCell(new Cell(1, 2).SetBorder(Border.NO_BORDER).SetBorderBottom(new SolidBorder(1)).Add(new Paragraph("Werkervaring")).SetFontSize(11));
 
             foreach (var work in previousWork)
             {
-                table.AddCell(new Cell(1, 2).SetBorder(Border.NO_BORDER).SetHeight(20));
-
-                table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(nameof(work.Position))));
-                table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(work.Position)));
-
-                table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(nameof(work.Company))));
-                table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(work.Company)));
-
-                table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(nameof(work.StartDate))));
-                table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(work.StartDate)));
-
-                table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(nameof(work.EndDate))));
-                table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(work.EndDate)));
-
-                table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(nameof(work.Summary))));
-                table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(work.Summary)));
-
-                if (work.Highlights == null)
-                {
-                    continue;
-                }
-
-                table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(nameof(work.Highlights))));
-
-                var highlightCell = new Cell().SetBorder(Border.NO_BORDER);
-
-                foreach (var highlight in work.Highlights)
-                {
-                    highlightCell.Add(new Paragraph(highlight));
-                }
-
-                table.AddCell(highlightCell);
+                table.AddCell(new Cell(1, 2).SetBorder(Border.NO_BORDER).SetHeight(Spacing));
+                table.AddCell(CreateDefaultCell($"{work.StartDate} - {work.EndDate}"));
+                table.AddCell(CreateDefaultCell(work.Position, true));
+                table.AddCell(CreateDefaultCell(work.Company));
+                table.AddCell(CreateDefaultCell(work.Summary));
             }
 
             return table;
@@ -125,30 +107,20 @@ namespace Resume.Pdf
 
         private Table CreateEducation(IEnumerable<Education> completeEducation)
         {
-            var table = new Table(new float[] { 1, 1 });
+            var table = new Table(1);
             table.SetWidth(UnitValue.CreatePercentValue(100));
-            table.SetMarginTop(20);
+            table.SetMarginTop(Spacing);
 
-            table.AddHeaderCell(new Cell(1, 2).SetBorder(Border.NO_BORDER).SetBorderBottom(new SolidBorder(1)).Add(new Paragraph("Education")));
+            table.AddHeaderCell(new Cell(1, 2).SetBorder(Border.NO_BORDER).SetBorderBottom(new SolidBorder(1)).Add(new Paragraph("Education")).SetFontSize(11));
 
             foreach (var education in completeEducation)
             {
-                table.AddCell(new Cell(1, 2).SetBorder(Border.NO_BORDER).SetHeight(20));
+                table.AddCell(new Cell(1, 2).SetBorder(Border.NO_BORDER).SetHeight(Spacing));
 
-                table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(nameof(education.Institution))));
-                table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(education.Institution)));
-
-                table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(nameof(education.StudyType))));
-                table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(education.StudyType)));
-
-                table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(nameof(education.StartDate))));
-                table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(education.StartDate)));
-
-                table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(nameof(education.EndDate))));
-                table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(education.EndDate)));
-
-                table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(nameof(education.Area))));
-                table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(education.Area)));
+                table.AddCell(CreateDefaultCell($"{education.StartDate} - {education.EndDate}"));
+                table.AddCell(CreateDefaultCell(education.Institution, true));
+                table.AddCell(CreateDefaultCell(education.StudyType));
+                table.AddCell(CreateDefaultCell(education.Area));
             }
 
             return table;
@@ -158,14 +130,15 @@ namespace Resume.Pdf
         {
             var table = new Table(new float[] { 1, 1 });
             table.SetWidth(UnitValue.CreatePercentValue(100));
-            table.SetMarginTop(20);
+            table.SetMarginTop(Spacing);
 
-            table.AddHeaderCell(new Cell(1, 2).SetBorder(Border.NO_BORDER).SetBorderBottom(new SolidBorder(1)).Add(new Paragraph("Languages")));
+            table.AddHeaderCell(new Cell(1, 2).SetBorder(Border.NO_BORDER).SetBorderBottom(new SolidBorder(1)).Add(new Paragraph("Languages")).SetFontSize(11));
+            table.AddCell(new Cell(1, 2).SetBorder(Border.NO_BORDER).SetHeight(Spacing));
 
             foreach (var language in languages)
             {
-                table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(language.Name)));
-                table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(language.Level)));
+                table.AddCell(CreateDefaultCell(language.Name));
+                table.AddCell(CreateDefaultCell(language.Level));
             }
 
             return table;
@@ -173,59 +146,67 @@ namespace Resume.Pdf
 
         private static Table CreateInterests(IEnumerable<Interest> interests)
         {
-            var table = new Table(new float[] { 1, 1 });
+            var table = new Table(1);
             table.SetWidth(UnitValue.CreatePercentValue(100));
-            table.SetMarginTop(20);
+            table.SetMarginTop(Spacing);
 
-            table.AddHeaderCell(new Cell(1, 2).SetBorder(Border.NO_BORDER).SetBorderBottom(new SolidBorder(1)).Add(new Paragraph("Interests")));
+            table.AddHeaderCell(new Cell(1, 1).SetBorder(Border.NO_BORDER).SetBorderBottom(new SolidBorder(1)).Add(new Paragraph("Interests")).SetFontSize(11));
+            table.AddCell(new Cell(1, 2).SetBorder(Border.NO_BORDER).SetHeight(Spacing));
+
+            var list = new List().SetListSymbol(new Image(ImageDataFactory.CreatePng(File.ReadAllBytes("images\\square-png-30.png"))).ScaleToFit(5, 5).SetMargins(1, 1, 1, 1));
 
             foreach (var interest in interests)
             {
-                table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(interest.Name)));
-                
-                var keywordsCell = new Cell().SetBorder(Border.NO_BORDER);
-
-                if (interest.Keywords != null)
-                {
-                    foreach (var keyword in interest.Keywords)
-                    {
-                        keywordsCell.Add(new Paragraph(keyword));
-                    }
-                }
-
-                table.AddCell(keywordsCell);
+                list.Add(new ListItem(interest.Name)).SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA));
             }
+
+            table.AddCell(new Cell(1, 1).Add(list).SetBorder(Border.NO_BORDER));
 
             return table;
         }
 
         private static Table CreateSkills(IEnumerable<Skill> skills)
         {
-            var table = new Table(new float[] { 1, 1, 1 });
+            var table = new Table(3);
             table.SetWidth(UnitValue.CreatePercentValue(100));
-            table.SetMarginTop(20);
+            table.SetMarginTop(Spacing);
 
-            table.AddHeaderCell(new Cell(1, 3).SetBorder(Border.NO_BORDER).SetBorderBottom(new SolidBorder(1)).Add(new Paragraph("Skills")));
+            table.AddHeaderCell(new Cell(1, 3).SetBorder(Border.NO_BORDER).SetBorderBottom(new SolidBorder(1)).Add(new Paragraph("Skills")).SetFontSize(11));
 
             foreach (var skill in skills)
             {
-                table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(skill.Name)));
-                table.AddCell(new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(skill.Level)));
-
-                var keywordsCell = new Cell().SetBorder(Border.NO_BORDER);
-
-                if (skill.Keywords != null)
-                {
-                    foreach (var keyword in skill.Keywords)
-                    {
-                        keywordsCell.Add(new Paragraph(keyword));
-                    }
-                }
-
-                table.AddCell(keywordsCell);
+                table.AddCell(CreateDefaultCell(skill.Name));
             }
 
             return table;
+        }
+
+        private static Paragraph CreateSummary(string summary)
+        {
+            var paragraph = new Paragraph();
+            paragraph.SetWidth(UnitValue.CreatePercentValue(100)).SetPaddings(Spacing, 2, Spacing, 2);
+
+            paragraph.Add(new Text(summary));
+
+            return paragraph;
+        }
+
+        private static Paragraph CreateMessage()
+        {
+            var paragraph = new Paragraph();
+            paragraph.SetWidth(UnitValue.CreatePercentValue(100));
+            paragraph.SetMarginTop(Spacing);
+
+            paragraph.Add(new Text("Resume generated using a console application.\r\nCode located at: https://www.github.com/orion538/resume"));
+            paragraph.SetTextAlignment(TextAlignment.CENTER);
+
+            return paragraph;
+        }
+
+        private static Cell CreateDefaultCell(string text, bool isBold = false)
+        {
+            var paragraphText = new Text(text).SetFont(PdfFontFactory.CreateFont(isBold ? StandardFonts.HELVETICA_BOLD : StandardFonts.HELVETICA));
+            return new Cell().SetBorder(Border.NO_BORDER).Add(new Paragraph(paragraphText));
         }
     }
 }

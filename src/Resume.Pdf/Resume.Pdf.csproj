@@ -12,4 +12,10 @@
     <ProjectReference Include="..\Resume.Data\Resume.Data.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Images\square-png-30.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
