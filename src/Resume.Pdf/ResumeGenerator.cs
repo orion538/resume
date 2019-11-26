@@ -10,6 +10,9 @@ using iText.Layout.Properties;
 using Resume.Data.Json;
 using System.Collections.Generic;
 using System.IO;
+using iText.Kernel.Geom;
+using iText.Kernel.Pdf.Canvas;
+using iText.Kernel.Pdf.Xobject;
 
 namespace Resume.Pdf
 {
@@ -25,7 +28,7 @@ namespace Resume.Pdf
 
         public void Create(Data.Json.Resume resume)
         {
-            var document = CreateDocument();
+            var (pdf, document) = CreateDocument();
             document.SetMargins(0, 0, 0, 0);
             document.SetFont(PdfFontFactory.CreateFont(StandardFonts.HELVETICA)).SetFontSize(9);
 
@@ -35,6 +38,7 @@ namespace Resume.Pdf
             var sideBarCell = new Cell().SetBackgroundColor(new DeviceRgb(242, 242, 242)).SetBorder(Border.NO_BORDER).SetWidth(UnitValue.CreatePercentValue(30));
             var contentCell = new Cell().SetBorder(Border.NO_BORDER).SetWidth(UnitValue.CreatePercentValue(70));
 
+            sideBarCell.Add(CreateProfilePicture(pdf));
             sideBarCell.Add(CreateBasics(resume.Basics));
             sideBarCell.Add(CreateLanguages(resume.Languages));
             sideBarCell.Add(CreateInterests(resume.Interests));
@@ -53,11 +57,11 @@ namespace Resume.Pdf
             document.Close();
         }
 
-        private static Document CreateDocument()
+        private static (PdfDocument, Document) CreateDocument()
         {
             var writer = new PdfWriter(FileName);
             var pdf = new PdfDocument(writer);
-            return new Document(pdf);
+            return (pdf, new Document(pdf));
         }
 
         private Table CreateBasics(Basics basics)
@@ -105,7 +109,7 @@ namespace Resume.Pdf
             return table;
         }
 
-        private Table CreateEducation(IEnumerable<Education> completeEducation)
+        private static Table CreateEducation(IEnumerable<Education> completeEducation)
         {
             var table = new Table(1);
             table.SetWidth(UnitValue.CreatePercentValue(100));
@@ -189,6 +193,37 @@ namespace Resume.Pdf
             paragraph.Add(new Text(summary));
 
             return paragraph;
+        }
+
+        private static Cell CreateProfilePicture(PdfDocument pdfDocument)
+        {
+            var pdfFormXObject = new PdfFormXObject(new Rectangle(100, 100));
+            var pdfCanvas = new PdfCanvas(pdfFormXObject, pdfDocument);
+            pdfCanvas.SaveState();
+
+            // Setting color to the circle 
+            var color = new DeviceRgb(255, 255, 255);
+            pdfCanvas.SetColor(color, true);
+
+            // creating a circle 
+            pdfCanvas.Circle(50, 50, 50);
+            pdfCanvas.Fill();
+
+            var rect = new Rectangle(pdfFormXObject.GetWidth() - 100, pdfFormXObject.GetHeight() - 75, 100, 50);
+            pdfCanvas.Rectangle(rect);
+            pdfCanvas.RestoreState();
+
+            var paragraph = new Paragraph("404\r\nNot Found").SetTextAlignment(TextAlignment.CENTER).SetFontColor(ColorConstants.BLACK);
+            using (var c = new Canvas(pdfCanvas, pdfDocument, rect, true))
+            {
+                c.Add(paragraph);
+                c.Close();
+            }
+
+            var image = new Image(pdfFormXObject).SetHeight(100).SetWidth(100).SetHorizontalAlignment(HorizontalAlignment.CENTER);
+            var cell = new Cell().SetPaddingTop(Spacing).SetPaddingBottom(Spacing).Add(image);
+
+            return cell;
         }
 
         private static Paragraph CreateMessage()
