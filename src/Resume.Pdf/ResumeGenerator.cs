@@ -214,7 +214,7 @@ namespace Resume.Pdf
             pdfCanvas.Rectangle(rect);
             pdfCanvas.RestoreState();
 
-            var paragraph = new Paragraph("404\r\nNot Found").SetTextAlignment(TextAlignment.CENTER).SetFontColor(ColorConstants.BLACK);
+            var paragraph = new Paragraph("302\r\nPicture not available").SetTextAlignment(TextAlignment.CENTER).SetFontColor(ColorConstants.BLACK);
             using (var c = new Canvas(pdfCanvas, pdfDocument, rect, true))
             {
                 c.Add(paragraph);

@@ -1,6 +1,6 @@
-﻿using System;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Resume.Pdf;
+using System;
 using System.Text.Json;
 
 namespace Resume.Domain.Mediators

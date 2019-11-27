@@ -1,4 +1,4 @@
-# Hey, why are you here? Go look at my resume instead.
+# Hey, why are you here? Take a look at my resume it's a lot more interesting
 
 ## Information
 
