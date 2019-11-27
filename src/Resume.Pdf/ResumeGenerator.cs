@@ -210,11 +210,11 @@ namespace Resume.Pdf
             pdfCanvas.Circle(50, 50, 50);
             pdfCanvas.Fill();
 
-            var rect = new Rectangle(pdfFormXObject.GetWidth() - 100, pdfFormXObject.GetHeight() - 75, 100, 50);
+            var rect = new Rectangle(pdfFormXObject.GetWidth() - 100, pdfFormXObject.GetHeight() - 90, 100, 75);
             pdfCanvas.Rectangle(rect);
             pdfCanvas.RestoreState();
 
-            var paragraph = new Paragraph("302\r\nPicture not available").SetTextAlignment(TextAlignment.CENTER).SetFontColor(ColorConstants.BLACK);
+            var paragraph = new Paragraph("302\r\nPicture\r\n not available").SetTextAlignment(TextAlignment.CENTER).SetFontColor(ColorConstants.BLACK);
             using (var c = new Canvas(pdfCanvas, pdfDocument, rect, true))
             {
                 c.Add(paragraph);
