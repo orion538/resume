@@ -11,6 +11,7 @@ using iText.Layout.Borders;
 using iText.Layout.Element;
 using iText.Layout.Properties;
 using Resume.Data.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -100,7 +101,7 @@ namespace Resume.Pdf
             foreach (var work in previousWork)
             {
                 table.AddCell(new Cell(1, 2).SetBorder(Border.NO_BORDER).SetHeight(Spacing));
-                table.AddCell(CreateDefaultCell($"{work.StartDate} - {work.EndDate}"));
+                table.AddCell(CreateDefaultCell($"{DateTime.Parse(work.StartDate):yyyy} - {DateTime.Parse(work.EndDate):yyyy}"));
                 table.AddCell(CreateDefaultCell(work.Position, true));
                 table.AddCell(CreateDefaultCell(work.Company));
                 table.AddCell(CreateDefaultCell(work.Summary));
@@ -121,7 +122,7 @@ namespace Resume.Pdf
             {
                 table.AddCell(new Cell(1, 2).SetBorder(Border.NO_BORDER).SetHeight(Spacing));
 
-                table.AddCell(CreateDefaultCell($"{education.StartDate} - {education.EndDate}"));
+                table.AddCell(CreateDefaultCell($"{DateTime.Parse(education.StartDate):yyyy} - {DateTime.Parse(education.EndDate):yyyy}"));
                 table.AddCell(CreateDefaultCell(education.Institution, true));
                 table.AddCell(CreateDefaultCell(education.StudyType));
                 table.AddCell(CreateDefaultCell(education.Area));

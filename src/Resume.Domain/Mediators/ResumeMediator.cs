@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System;
+using Microsoft.Extensions.Logging;
 using Resume.Pdf;
 using System.Text.Json;
 
@@ -28,11 +29,28 @@ namespace Resume.Domain.Mediators
                 WriteIndented = true
             };
 
-            var resume = JsonParser.GetModelFromJson<Data.Json.Resume>(options, pathToFile);
-            _logger.LogInformation("Mapped resume to an object.");
+            Data.Json.Resume resume = null;
 
-            CreatePdfDocument(resume);
-            _logger.LogInformation("Created PDF.");
+            try
+            {
+                resume = JsonParser.GetModelFromJson<Data.Json.Resume>(options, pathToFile);
+            }
+            catch (JsonException jsonException)
+            {
+                _logger.LogError(jsonException, "Could not parse the JSON");
+            }
+            catch (ArgumentException argumentException)
+            {
+                _logger.LogError(argumentException, "JSON does not match the required schema.");
+            }
+
+            if (resume != null)
+            {
+                _logger.LogInformation("Mapped resume to an object.");
+
+                CreatePdfDocument(resume);
+                _logger.LogInformation("Created PDF.");
+            }
         }
 
         private void CreatePdfDocument(Data.Json.Resume resume)
