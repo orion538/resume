@@ -65,7 +65,7 @@ namespace Resume.Pdf
             return (pdf, new Document(pdf));
         }
 
-        private Table CreateBasics(Basics basics)
+        private static Table CreateBasics(Basics basics)
         {
             var table = new Table(1);
             table.SetWidth(UnitValue.CreatePercentValue(100));
@@ -74,18 +74,18 @@ namespace Resume.Pdf
 
             table.AddCell(new Cell(1, 2).SetBorder(Border.NO_BORDER).SetHeight(Spacing));
 
-            table.AddCell(CreateDefaultCell(nameof(basics.Name), true));
+            table.AddCell(CreateDefaultCell("Naam", true));
             table.AddCell(CreateDefaultCell(basics.Name));
 
-            table.AddCell(CreateDefaultCell(nameof(basics.Location.Address), true));
+            table.AddCell(CreateDefaultCell("Adres", true));
             table.AddCell(CreateDefaultCell(basics.Location.Address));
             table.AddCell(CreateDefaultCell($"{basics.Location.PostalCode}, {basics.Location.City}"));
             table.AddCell(CreateDefaultCell(basics.Location.CountryCode));
 
-            table.AddCell(CreateDefaultCell(nameof(basics.Email), true));
+            table.AddCell(CreateDefaultCell("E-mail", true));
             table.AddCell(CreateDefaultCell(basics.Email));
 
-            table.AddCell(CreateDefaultCell(nameof(basics.Phone), true));
+            table.AddCell(CreateDefaultCell("Telefoon", true));
             table.AddCell(CreateDefaultCell(basics.Phone));
 
             return table;
@@ -116,7 +116,7 @@ namespace Resume.Pdf
             table.SetWidth(UnitValue.CreatePercentValue(100));
             table.SetMarginTop(Spacing);
 
-            table.AddHeaderCell(new Cell(1, 2).SetBorder(Border.NO_BORDER).SetBorderBottom(new SolidBorder(1)).Add(new Paragraph("Education")).SetFontSize(11));
+            table.AddHeaderCell(new Cell(1, 2).SetBorder(Border.NO_BORDER).SetBorderBottom(new SolidBorder(1)).Add(new Paragraph("Opleiding")).SetFontSize(11));
 
             foreach (var education in completeEducation)
             {
@@ -137,7 +137,7 @@ namespace Resume.Pdf
             table.SetWidth(UnitValue.CreatePercentValue(100));
             table.SetMarginTop(Spacing);
 
-            table.AddHeaderCell(new Cell(1, 2).SetBorder(Border.NO_BORDER).SetBorderBottom(new SolidBorder(1)).Add(new Paragraph("Languages")).SetFontSize(11));
+            table.AddHeaderCell(new Cell(1, 2).SetBorder(Border.NO_BORDER).SetBorderBottom(new SolidBorder(1)).Add(new Paragraph("Talen")).SetFontSize(11));
             table.AddCell(new Cell(1, 2).SetBorder(Border.NO_BORDER).SetHeight(Spacing));
 
             foreach (var language in languages)
@@ -155,7 +155,7 @@ namespace Resume.Pdf
             table.SetWidth(UnitValue.CreatePercentValue(100));
             table.SetMarginTop(Spacing);
 
-            table.AddHeaderCell(new Cell(1, 1).SetBorder(Border.NO_BORDER).SetBorderBottom(new SolidBorder(1)).Add(new Paragraph("Interests")).SetFontSize(11));
+            table.AddHeaderCell(new Cell(1, 1).SetBorder(Border.NO_BORDER).SetBorderBottom(new SolidBorder(1)).Add(new Paragraph("Interesses")).SetFontSize(11));
             table.AddCell(new Cell(1, 2).SetBorder(Border.NO_BORDER).SetHeight(Spacing));
 
             var list = new List().SetListSymbol(new Image(ImageDataFactory.CreatePng(File.ReadAllBytes("images\\square-png-30.png"))).ScaleToFit(5, 5).SetMargins(1, 1, 1, 1));
@@ -233,7 +233,7 @@ namespace Resume.Pdf
             paragraph.SetWidth(UnitValue.CreatePercentValue(100));
             paragraph.SetMarginTop(Spacing);
 
-            paragraph.Add(new Text("Resume generated using a console application.\r\nCode located at: https://www.github.com/orion538/resume"));
+            paragraph.Add(new Text("CV gegenereerd door een console applicatie.\r\nCode beschikbaar op: https://www.github.com/orion538/resume"));
             paragraph.SetTextAlignment(TextAlignment.CENTER);
 
             return paragraph;
